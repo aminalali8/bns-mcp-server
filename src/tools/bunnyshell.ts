@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BunnyshellClient } from '../helpers/bunnyshell';
+import { BunnyshellClient } from '../helpers/bunnyshell.js';
 import {
   Project,
   Environment,
@@ -7,7 +7,10 @@ import {
   CreateProjectRequest,
   CreateEnvironmentRequest,
   CreateComponentRequest,
-} from '../types/bunnyshell';
+  ListEnvironmentsResponse,
+  ListProjectsResponse,
+  BunnyshellError,
+} from '../types/bunnyshell.js';
 
 // Tool Schemas
 export const ListProjectsToolSchema = z.object({

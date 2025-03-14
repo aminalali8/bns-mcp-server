@@ -198,14 +198,6 @@ export interface BunnyshellLogConfig {
   logErrors?: boolean;
 }
 
-// Rate Limiting Types
-export interface BunnyshellRateLimitConfig {
-  maxRequestsPerMinute?: number;
-  maxRequestsPerHour?: number;
-  maxConcurrentRequests?: number;
-  queueSize?: number;
-}
-
 // Testing Types
 export interface BunnyshellMockConfig {
   enabled?: boolean;
@@ -222,7 +214,6 @@ export interface BunnyshellApiConfig {
   retries?: number;
   retryDelay?: number;
   logging?: BunnyshellLogConfig;
-  rateLimit?: BunnyshellRateLimitConfig;
   mock?: BunnyshellMockConfig;
 }
 

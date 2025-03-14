@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const serverConfigSchema = z.object({
   port: z.number().default(3000),
   host: z.string().default('localhost'),
-  bunnyshellToken: z.string(),
+  bunnyshellToken: z.string().optional(),
   logLevel: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   cors: z.object({
     enabled: z.boolean().default(true),
@@ -21,7 +21,7 @@ export const serverConfigSchema = z.object({
 export const defaultConfig = {
   port: 3000,
   host: 'localhost',
-  bunnyshellToken: process.env.BUNNYSHELL_TOKEN || '',
+  bunnyshellToken: process.env.BUNNYSHELL_TOKEN,
   logLevel: 'info' as const,
   cors: {
     enabled: true,

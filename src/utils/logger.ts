@@ -9,6 +9,12 @@ export const loggerConfigSchema = z.object({
 
 export type LoggerConfig = z.infer<typeof loggerConfigSchema>;
 
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface LoggerOptions {
+  level?: LogLevel;
+}
+
 export class Logger {
   private config: LoggerConfig;
   private levels = {
@@ -17,13 +23,19 @@ export class Logger {
     warn: 2,
     error: 3,
   };
+  private level: LogLevel;
 
-  constructor(config: LoggerConfig) {
-    this.config = loggerConfigSchema.parse(config);
+  constructor(options: LoggerOptions = {}) {
+    this.level = options.level || 'info';
+    this.config = loggerConfigSchema.parse({
+      level: this.level,
+      format: 'text',
+      timestamp: true,
+    });
   }
 
   private shouldLog(level: keyof typeof this.levels): boolean {
-    return this.levels[level] >= this.levels[this.config.level];
+    return this.levels[level] >= this.levels[this.level];
   }
 
   private formatMessage(level: string, message: string, ...args: unknown[]): string {
@@ -42,27 +54,25 @@ export class Logger {
     return `${timestamp}[${level.toUpperCase()}] ${formattedMessage}`;
   }
 
-  debug(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('debug')) {
-      console.debug(this.formatMessage('debug', message, ...args));
+  private log(level: LogLevel, ...args: any[]) {
+    if (this.shouldLog(level)) {
+      console[level](...args);
     }
   }
 
-  info(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('info')) {
-      console.info(this.formatMessage('info', message, ...args));
-    }
+  debug(...args: any[]) {
+    this.log('debug', ...args);
   }
 
-  warn(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('warn')) {
-      console.warn(this.formatMessage('warn', message, ...args));
-    }
+  info(...args: any[]) {
+    this.log('info', ...args);
   }
 
-  error(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('error')) {
-      console.error(this.formatMessage('error', message, ...args));
-    }
+  warn(...args: any[]) {
+    this.log('warn', ...args);
+  }
+
+  error(...args: any[]) {
+    this.log('error', ...args);
   }
 } 

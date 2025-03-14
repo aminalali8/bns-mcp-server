@@ -1,4 +1,4 @@
-import { BunnyshellTools } from './bunnyshell';
+import { BunnyshellTools } from './bunnyshell.js';
 import {
   ListProjectsToolSchema,
   GetProjectToolSchema,
@@ -9,7 +9,7 @@ import {
   ListComponentsToolSchema,
   GetComponentToolSchema,
   CreateComponentToolSchema,
-} from './bunnyshell';
+} from './bunnyshell.js';
 
 export const tools = [
   ListProjectsToolSchema,

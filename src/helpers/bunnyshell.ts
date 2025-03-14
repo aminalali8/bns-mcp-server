@@ -18,9 +18,8 @@ import {
   ListProjectsResponse,
   ListComponentsResponse,
   BunnyshellLogConfig,
-  BunnyshellRateLimitConfig,
   BunnyshellMockConfig,
-} from '../types/bunnyshell';
+} from '../types/bunnyshell.js';
 
 export class BunnyshellClient implements IBunnyshellClient {
   private config: Required<BunnyshellApiConfig>;
@@ -35,12 +34,6 @@ export class BunnyshellClient implements IBunnyshellClient {
         logRequests: false,
         logResponses: false,
         logErrors: true,
-      },
-      rateLimit: {
-        maxRequestsPerMinute: 60,
-        maxRequestsPerHour: 1000,
-        maxConcurrentRequests: 10,
-        queueSize: 100,
       },
       mock: {
         enabled: false,
