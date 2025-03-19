@@ -1,3 +1,5 @@
+# Ignore Cursor files
+.cursor/
 # Ignore macOS system files
 .DS_Store
 
