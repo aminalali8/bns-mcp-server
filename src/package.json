@@ -1,0 +1,29 @@
+{
+  "name": "@modelcontextprotocol/bns-control-panel",
+  "version": "0.0.1",
+  "description": "MCP server for Bunnyshell API/CLI Integration",
+  "license": "MIT",
+  "author": "Amin Al Ali Al Darwish //TODO add my linkedin profile or github profile",
+  "homepage": "https://modelcontextprotocol.io",
+  "bugs": "https://github.com/modelcontextprotocol/servers/issues",
+  "type": "module",
+  "bin": {
+    "mcp-server-bns-control-panel": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/*.js",
+    "prepare": "npm run build",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "shx": "^0.4.0",
+    "typescript": "^5.8.2"
+  }
+}
