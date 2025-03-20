@@ -52,3 +52,7 @@ Desktop.ini
 *.tsv
 *.jsonl
 :
+
+#add any dist or output files
+dist/
+output/
