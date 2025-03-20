@@ -56,7 +56,7 @@ function setupOrganizationTools(server: McpServer): void {
   server.tool(
     "list-organizations",
     {
-      filter: z.string().describe("Filter expression containing token and optional search terms"),
+      filter: z.string().describe("Filter expression containing token (e.g., 'token: YOUR_API_TOKEN')"),
       page: z.number().optional().describe("Page number for pagination")
     },
     async ({ filter, page }) => {
@@ -68,7 +68,7 @@ function setupOrganizationTools(server: McpServer): void {
         return {
           content: [{ 
             type: "text", 
-            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_API_TOKEN')"
           }]
         };
       }
@@ -104,7 +104,7 @@ function setupProjectTools(server: McpServer): void {
     "list-projects",
     {
       organization: z.string().optional().describe("Organization ID"),
-      filter: z.string().describe("Filter expression containing token and optional search terms"),
+      filter: z.string().describe("Filter expression containing token (e.g., 'token: YOUR_API_TOKEN')"),
       page: z.number().optional().describe("Page number for pagination")
     },
     async ({ organization, filter, page }) => {
@@ -116,7 +116,7 @@ function setupProjectTools(server: McpServer): void {
         return {
           content: [{ 
             type: "text", 
-            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_API_TOKEN')"
           }]
         };
       }
@@ -153,7 +153,7 @@ function setupProjectTools(server: McpServer): void {
       name: z.string().describe("Project name"),
       organization: z.string().describe("Organization ID"),
       description: z.string().optional().describe("Project description"),
-      filter: z.string().describe("Filter expression containing token")
+      filter: z.string().describe("Filter expression containing token (e.g., 'token: YOUR_API_TOKEN')")
     },
     async ({ name, organization, description, filter }) => {
       // Extract token from filter
@@ -162,7 +162,7 @@ function setupProjectTools(server: McpServer): void {
         return {
           content: [{ 
             type: "text", 
-            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_API_TOKEN')"
           }]
         };
       }
@@ -189,7 +189,7 @@ function setupProjectTools(server: McpServer): void {
     "delete-project",
     {
       project: z.string().describe("Project ID to delete"),
-      filter: z.string().describe("Filter expression containing token")
+      filter: z.string().describe("Filter expression containing token (e.g., 'token: YOUR_API_TOKEN')")
     },
     async ({ project, filter }) => {
       // Extract token from filter
@@ -198,7 +198,7 @@ function setupProjectTools(server: McpServer): void {
         return {
           content: [{ 
             type: "text", 
-            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_API_TOKEN')"
           }]
         };
       }
@@ -227,7 +227,7 @@ function setupEnvironmentTools(server: McpServer): void {
     {
       project: z.string().optional().describe("Project ID"),
       organization: z.string().optional().describe("Organization ID"),
-      filter: z.string().describe("Filter expression containing token and optional search terms"),
+      filter: z.string().describe("Filter expression containing token (e.g., 'token: YOUR_API_TOKEN')"),
       operationStatus: z.string().optional().describe("Filter by operation status (e.g., draft, stopped)"),
       clusterStatus: z.string().optional().describe("Filter by cluster status"),
       type: z.string().optional().describe("Filter by environment type"),
@@ -242,7 +242,7 @@ function setupEnvironmentTools(server: McpServer): void {
         return {
           content: [{ 
             type: "text", 
-            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_API_TOKEN')"
           }]
         };
       }
@@ -296,7 +296,7 @@ function setupEnvironmentTools(server: McpServer): void {
       project: z.string().describe("Project ID"),
       template: z.string().describe("Template ID"),
       branch: z.string().optional().describe("Git branch"),
-      filter: z.string().describe("Filter expression containing token")
+      filter: z.string().describe("Filter expression containing token (e.g., 'token: YOUR_API_TOKEN')")
     },
     async ({ name, project, template, branch, filter }) => {
       // Extract token from filter
@@ -305,7 +305,7 @@ function setupEnvironmentTools(server: McpServer): void {
         return {
           content: [{ 
             type: "text", 
-            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_API_TOKEN')"
           }]
         };
       }
@@ -332,7 +332,7 @@ function setupEnvironmentTools(server: McpServer): void {
     "start-environment",
     {
       environment: z.string().describe("Environment ID to start"),
-      filter: z.string().describe("Filter expression containing token")
+      filter: z.string().describe("Filter expression containing token (e.g., 'token: YOUR_API_TOKEN')")
     },
     async ({ environment, filter }) => {
       // Extract token from filter
@@ -341,7 +341,7 @@ function setupEnvironmentTools(server: McpServer): void {
         return {
           content: [{ 
             type: "text", 
-            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_API_TOKEN')"
           }]
         };
       }
@@ -364,7 +364,7 @@ function setupEnvironmentTools(server: McpServer): void {
     "stop-environment",
     {
       environment: z.string().describe("Environment ID to stop"),
-      filter: z.string().describe("Filter expression containing token")
+      filter: z.string().describe("Filter expression containing token (e.g., 'token: YOUR_API_TOKEN')")
     },
     async ({ environment, filter }) => {
       // Extract token from filter
@@ -373,7 +373,7 @@ function setupEnvironmentTools(server: McpServer): void {
         return {
           content: [{ 
             type: "text", 
-            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_API_TOKEN')"
           }]
         };
       }
@@ -396,7 +396,7 @@ function setupEnvironmentTools(server: McpServer): void {
     "delete-environment",
     {
       environment: z.string().describe("Environment ID to delete"),
-      filter: z.string().describe("Filter expression containing token")
+      filter: z.string().describe("Filter expression containing token (e.g., 'token: YOUR_API_TOKEN')")
     },
     async ({ environment, filter }) => {
       // Extract token from filter
@@ -405,7 +405,7 @@ function setupEnvironmentTools(server: McpServer): void {
         return {
           content: [{ 
             type: "text", 
-            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_API_TOKEN')"
           }]
         };
       }

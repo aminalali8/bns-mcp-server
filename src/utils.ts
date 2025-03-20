@@ -59,7 +59,9 @@ export async function execBnsCommand(
       fullCommand += " --non-interactive";
     }
     
-    console.log(`Executing: ${fullCommand}`);
+    // Log command without token for security
+    console.log(`Executing: bns ${command} [token omitted] ${options.json ? "--output json" : ""} ${options.nonInteractive ? "--non-interactive" : ""}`);
+    
     return await exec(fullCommand);
   } catch (error) {
     console.error(`Error executing command: ${error}`);
