@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  bns-mcp-server:
+    container_name: bns-mcp-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./bunnyshell-config:/root/.bunnyshell
+      - ~/.claude-dev:/root/.claude-dev
+    # These options are not needed anymore as our start script keeps the container running
+    # stdin_open: true
+    # tty: true
+

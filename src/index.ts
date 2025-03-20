@@ -1,33 +1,44 @@
-import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
 
-// Create an MCP server
+// Import our modules
+import { setupResources } from "./resources.js";
+import { setupPrompts } from "./prompts.js";
+import { setupTools } from "./tools.js";
+
+// Create an MCP server for Bunnyshell
 const server = new McpServer({
-  name: "Demo",
+  name: "BunnyshellMCP",
   version: "1.0.0"
 });
 
-// Add an addition tool
-server.tool("add",
-  { a: z.number(), b: z.number() },
-  async ({ a, b }) => ({
-    content: [{ type: "text", text: String(a + b) }]
-  })
-);
+// Setup all capabilities
+setupResources(server);
+setupPrompts(server);
+setupTools(server);
 
-// Add a dynamic greeting resource
-server.resource(
-  "greeting",
-  new ResourceTemplate("greeting://{name}", { list: undefined }),
-  async (uri, { name }) => ({
-    contents: [{
-      uri: uri.href,
-      text: `Hello, ${name}!`
-    }]
-  })
-);
+// Log server startup
+console.log("Bunnyshell MCP Server starting...");
 
 // Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport();
 await server.connect(transport);
+
+console.log("Bunnyshell MCP Server connected");
+
+// Prevent the Node.js process from exiting
+process.stdin.resume();
+
+// Handle termination signals gracefully
+process.on('SIGINT', () => {
+  console.log('Received SIGINT, shutting down...');
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('Received SIGTERM, shutting down...');
+  process.exit(0);
+});
+
+// Log to show the server is ready and listening
+console.log("Bunnyshell MCP Server is running and waiting for connections...");
