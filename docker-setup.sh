@@ -17,39 +17,60 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
+# Check Docker version
+DOCKER_VERSION=$(docker --version | cut -d' ' -f3 | cut -d'.' -f1)
+if [ "$DOCKER_VERSION" -lt 20 ]; then
+    echo -e "${RED}Docker version 20+ is required. Current version: $DOCKER_VERSION${NC}"
+    exit 1
+fi
+
 # Check if Docker Compose is installed
 if ! command -v docker-compose &> /dev/null; then
     echo -e "${RED}Docker Compose is not installed. Please install Docker Compose and try again.${NC}"
     exit 1
 fi
 
-# Ask for Bunnyshell API key if not set
-if [ -z "$BNS_API_KEY" ]; then
-    read -p "Enter your Bunnyshell API key: " BNS_API_KEY
-    if [ -z "$BNS_API_KEY" ]; then
-        echo -e "${RED}API key is required.${NC}"
-        exit 1
-    fi
-fi
-
-# Ask for Bunnyshell organization ID if not set
-if [ -z "$BNS_ORGANIZATION" ]; then
-    read -p "Enter your Bunnyshell organization ID: " BNS_ORGANIZATION
-    if [ -z "$BNS_ORGANIZATION" ]; then
-        echo -e "${RED}Organization ID is required.${NC}"
-        exit 1
-    fi
-fi
-
-# Create .env file
-echo -e "${YELLOW}Creating .env file...${NC}"
-cat > .env << EOF
-BNS_API_KEY=$BNS_API_KEY
-BNS_ORGANIZATION=$BNS_ORGANIZATION
+# Create Docker Compose file if it doesn't exist
+if [ ! -f "docker-compose.yml" ]; then
+    echo -e "${YELLOW}Creating docker-compose.yml...${NC}"
+    cat > docker-compose.yml << EOF
+version: '3.8'
+services:
+  bns-mcp-server:
+    build: .
+    container_name: bns-mcp-server
+    volumes:
+      - .:/app
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
 EOF
+fi
+
+# Create Dockerfile if it doesn't exist
+if [ ! -f "Dockerfile" ]; then
+    echo -e "${YELLOW}Creating Dockerfile...${NC}"
+    cat > Dockerfile << EOF
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install Bunnyshell CLI
+RUN apk add --no-cache curl bash && \
+    curl -fsSL https://raw.githubusercontent.com/bunnyshell/cli/main/install.sh | bash
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+CMD ["node", "dist/index.js"]
+EOF
+fi
 
 # Build and start the container
-echo -e "${YELLOW}Building and starting the Alpine Linux-based Docker container...${NC}"
+echo -e "${YELLOW}Building and starting the Docker container...${NC}"
 docker-compose up -d --build
 
 # Check if container is running
@@ -72,7 +93,7 @@ if [ $? -eq 0 ] && [ "$(docker ps -q -f name=bns-mcp-server)" ]; then
   "mcpServers": {
     "bunnyshell-mcp": {
       "command": "docker",
-      "args": ["exec", "-i", "bns-mcp-server", "node", "src/dist/index.js"]
+      "args": ["exec", "-i", "bns-mcp-server", "node", "dist/index.js"]
     }
   }
 }
@@ -84,20 +105,28 @@ EOF
   "mcpServers": {
     "bunnyshell-mcp": {
       "command": "docker",
-      "args": ["exec", "-i", "bns-mcp-server", "node", "src/dist/index.js"]
+      "args": ["exec", "-i", "bns-mcp-server", "node", "dist/index.js"]
     }
   }
 }'
     fi
     
     echo -e "\n${GREEN}Setup complete!${NC}"
+    echo -e "Now you need to:"
     echo -e "1. Start or restart Claude Desktop"
     echo -e "2. Start a new conversation with Claude"
     echo -e "3. Click '+' to add an attachment and select 'Connect to MCP server'"
     echo -e "4. Choose 'bunnyshell-mcp' from the list of servers"
-    echo -e "5. Ask Claude to help you manage your Bunnyshell resources\n"
+    echo -e "5. Set your Bunnyshell API token using: token: YOUR_API_TOKEN"
+    echo -e "6. Start managing your Bunnyshell resources!\n"
     
-    echo -e "For more details, see the ${YELLOW}DOCKER.md${NC} file."
+    echo -e "Example commands you can try:"
+    echo -e "- List your organizations"
+    echo -e "- List projects in an organization"
+    echo -e "- Create a new environment"
+    echo -e "- Deploy a component\n"
+    
+    echo -e "For more details, see the ${YELLOW}README.md${NC} file."
 else
     echo -e "\n${RED}Failed to start container. Check the logs with:${NC} docker-compose logs"
     exit 1

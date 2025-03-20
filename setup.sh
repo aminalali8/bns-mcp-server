@@ -15,6 +15,13 @@ if ! command -v node &> /dev/null; then
     exit 1
 fi
 
+# Check Node.js version
+NODE_VERSION=$(node -v | cut -d'v' -f2)
+if [ "$(echo "$NODE_VERSION" | cut -d'.' -f1)" -lt 18 ]; then
+    echo -e "${RED}Node.js version 18+ is required. Current version: $NODE_VERSION${NC}"
+    exit 1
+fi
+
 # Check if npm is installed
 if ! command -v npm &> /dev/null; then
     echo -e "${RED}npm is not installed. Please install npm and try again.${NC}"
@@ -30,11 +37,13 @@ fi
 
 # Check bns configuration
 echo -e "${YELLOW}Checking Bunnyshell CLI configuration...${NC}"
-bns configure verify
+if ! bns configure verify &> /dev/null; then
+    echo -e "${RED}Bunnyshell CLI is not properly configured. Please run 'bns configure' first.${NC}"
+    exit 1
+fi
 
 # Install dependencies
 echo -e "\n${YELLOW}Installing dependencies...${NC}"
-cd src
 npm install
 
 # Build the project
@@ -51,7 +60,7 @@ if [ ! -d "$CLAUDE_CONFIG_DIR" ]; then
 fi
 
 # Get absolute path to the server
-ABSOLUTE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/src/dist/index.js"
+ABSOLUTE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/dist/index.js"
 
 # Create or update Claude config
 if [ ! -f "$CLAUDE_CONFIG_FILE" ]; then
@@ -78,6 +87,13 @@ echo -e "1. Start or restart Claude Desktop"
 echo -e "2. Start a new conversation with Claude"
 echo -e "3. Click '+' to add an attachment and select 'Connect to MCP server'"
 echo -e "4. Choose 'bunnyshell-mcp' from the list of servers"
-echo -e "5. Ask Claude to help you manage your Bunnyshell resources\n"
+echo -e "5. Set your Bunnyshell API token using: token: YOUR_API_TOKEN"
+echo -e "6. Start managing your Bunnyshell resources!\n"
 
-echo -e "For more details, see the ${YELLOW}SETUP.md${NC} file." 
+echo -e "Example commands you can try:"
+echo -e "- List your organizations"
+echo -e "- List projects in an organization"
+echo -e "- Create a new environment"
+echo -e "- Deploy a component\n"
+
+echo -e "For more details, see the ${YELLOW}README.md${NC} file." 

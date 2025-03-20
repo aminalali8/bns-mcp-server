@@ -4,126 +4,118 @@ A Model Context Protocol (MCP) server implementation for interfacing with the Bu
 
 ## Overview
 
-This project creates an MCP server that enables AI assistants (like Claude) to interact with the Bunnyshell platform using the Bunnyshell CLI (`bns`). The server provides:
+This project creates an MCP server that enables AI assistants (like Claude) to interact with the Bunnyshell platform using the Bunnyshell CLI (`bns`). The server provides a set of tools for managing your Bunnyshell resources through natural language commands.
 
-- **Resources**: Static and dynamic data about Bunnyshell entities and capabilities
-- **Prompts**: Structured templates for common Bunnyshell operations
-- **Tools**: Executable functions that interface with the `bns` CLI
+## Features
 
-## Architecture Plan
+- **Organization Management**: List and navigate organizations
+- **Project Management**: Create, list, and delete projects
+- **Environment Management**: Create, list, start, stop, and delete environments
+- **Component Operations**: Deploy, debug, and SSH into components
+- **Variable & Secret Management**: Manage environment variables and secrets
+- **Remote Development**: Start remote development sessions and set up port forwarding
 
-### 1. Basic Server Setup
+## Prerequisites
 
-- Initialize TypeScript project with MCP SDK
-- Create basic server configuration
-- Set up stdio transport for local communication
-- Enable resource, prompt, and tool capabilities
+- Node.js 18+ and npm
+- Bunnyshell CLI (`bns`) installed and configured
+- Claude Desktop
+- Docker and Docker Compose (for Docker setup)
 
-### 2. Resources Implementation
+## Installation
 
-#### Static Resources
+### Local Setup
 
-- `bunnyshell://overview`: General information about Bunnyshell
-- `bunnyshell://commands`: List of available `bns` commands
-- `bunnyshell://workflows`: Common workflows and best practices
+1. Clone the repository:
+```bash
+git clone https://github.com/bunnyshell/bns-mcp.git
+cd bns-mcp
+```
 
-#### Resource Templates
+2. Run the setup script:
+```bash
+./setup.sh
+```
 
-- `bunnyshell://environments/{environmentId}`: Environment details
-- `bunnyshell://projects/{projectId}`: Project information
-- `bunnyshell://components/{componentId}`: Component details
-- `bunnyshell://templates/{templateId}`: Template information
+### Docker Setup
 
-### 3. Prompts Implementation
+1. Clone the repository:
+```bash
+git clone https://github.com/bunnyshell/bns-mcp.git
+cd bns-mcp
+```
 
-- **Environment Creation**: Guide for creating new environments
-- **Component Deployment**: Steps for deploying components
-- **Troubleshooting**: Common issues and resolutions
-- **Remote Development**: Guide for remote development setup
+2. Run the Docker setup script:
+```bash
+./docker-setup.sh
+```
 
-### 4. Tools Implementation
+## Usage
 
-#### Organization & Project Management
-- `list-organizations`: List all organizations
-- `list-projects`: List all projects in an organization
-- `create-project`: Create a new project
-- `delete-project`: Delete a project
+1. Start or restart Claude Desktop
+2. Start a new conversation with Claude
+3. Click '+' to add an attachment and select 'Connect to MCP server'
+4. Choose 'bunnyshell-mcp' from the list of servers
+5. Set your Bunnyshell API token:
+```
+token: YOUR_API_TOKEN
+```
 
-#### Environment Management
-- `list-environments`: List environments in a project
-- `create-environment`: Create an environment from a template
-- `delete-environment`: Delete an environment
-- `start-environment`: Start an environment
-- `stop-environment`: Stop an environment
+### Example Commands
 
-#### Component Operations
-- `list-components`: List components in an environment
-- `deploy-component`: Deploy a component
-- `debug-component`: Debug a component
-- `ssh-component`: SSH into a component
+You can ask Claude to:
 
-#### Variable & Secret Management
-- `list-variables`: List environment variables
-- `create-variable`: Create an environment variable
-- `list-secrets`: List secrets
-- `create-secret`: Create a secret
-
-#### Remote Development
-- `start-remote-dev`: Start remote development
-- `port-forward`: Set up port forwarding
-
-## Implementation Phases
-
-### Phase 1: Core Resources
-- Set up project structure
-- Implement static resources
-- Add basic resource templates
-
-### Phase 2: Essential Tools
-- Implement high-priority CLI tools
-- Create handlers for listing/viewing entities
-- Add environment management tools
-
-### Phase 3: Advanced Features
-- Add remaining tools
-- Implement prompts
-- Polish error handling
-- Improve documentation
-
-### Phase 4: Testing & Optimization
-- Test with Claude and other MCP clients
-- Refine user experience
-- Optimize performance
-
-## Usage (Future)
-
-1. Install the MCP server
-2. Configure Claude Desktop to use the server
-3. Start a conversation with Claude and attach the Bunnyshell MCP resource
-4. Ask Claude to perform Bunnyshell operations
+- "List my organizations"
+- "Create a new project called 'MyProject' in organization ABC123"
+- "List all environments in project XYZ789"
+- "Start environment ENV123"
+- "Deploy component COMP456"
+- "Create a variable called 'DATABASE_URL' in environment ENV123"
 
 ## Development
 
-### Prerequisites
-- Node.js and npm
-- Bunnyshell CLI (`bns`) properly configured
-- Claude Desktop (for testing)
+### Project Structure
 
-### Getting Started
-```bash
-# Clone the repository
-git clone https://github.com/your-username/bns-mcp.git
-cd bns-mcp
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Add to Claude Desktop configuration
-# Edit ~/.claude-dev/config.json
 ```
+.
+├── src/
+│   ├── tools.ts       # Tool implementations
+│   ├── utils.ts       # Utility functions
+│   └── index.ts       # Server entry point
+├── setup.sh          # Local setup script
+├── docker-setup.sh   # Docker setup script
+└── README.md         # Documentation
+```
+
+### Building
+
+```bash
+npm install
+npm run build
+```
+
+### Running Tests
+
+```bash
+npm test
+```
+
+## Security
+
+- API tokens are never stored in the code or configuration files
+- Tokens can be provided via:
+  - Command line options
+  - Environment variable (BNS_API_KEY)
+  - Session storage (temporary, in-memory only)
+- Command logging omits sensitive information
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
