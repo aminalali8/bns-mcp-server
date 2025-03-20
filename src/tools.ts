@@ -56,33 +56,40 @@ function setupOrganizationTools(server: McpServer): void {
   server.tool(
     "list-organizations",
     {
-      filter: z.string().optional().describe("Filter expression for organizations"),
-      limit: z.number().optional().describe("Maximum number of items to return")
+      filter: z.string().describe("Filter expression containing token and optional search terms"),
+      page: z.number().optional().describe("Page number for pagination")
     },
-    async ({ filter, limit }) => {
+    async ({ filter, page }) => {
       let command = "organizations list";
       
-      // Extract token if provided in filter
-      const tokenFromFilter = filter ? extractTokenFromMessage(filter) : undefined;
-      
-      // If we got a token from the filter, set it as the session token
-      if (tokenFromFilter) {
-        setSessionToken(tokenFromFilter);
+      // Extract token from filter
+      const tokenFromFilter = extractTokenFromMessage(filter);
+      if (!tokenFromFilter) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+          }]
+        };
       }
       
-      if (limit) {
-        command += ` --limit ${limit}`;
+      // If filter contains search terms (not just token), use --search
+      const cleanFilter = filter.replace(/token:\s*([^\s]+)/i, "").trim();
+      if (cleanFilter) {
+        command += ` --search "${cleanFilter}"`;
       }
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      if (page) {
+        command += ` --page ${page}`;
+      }
+      
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenFromFilter });
       
       return {
-        content: [
-          { 
-            type: "text", 
-            text: formatOutput(stdout, stderr, command, needsToken)
-          }
-        ]
+        content: [{ 
+          type: "text", 
+          text: formatOutput(stdout, stderr, command, needsToken)
+        }]
       };
     }
   );
@@ -97,33 +104,44 @@ function setupProjectTools(server: McpServer): void {
     "list-projects",
     {
       organization: z.string().optional().describe("Organization ID"),
-      filter: z.string().optional().describe("Filter expression"),
-      limit: z.number().optional().describe("Maximum number of items to return")
+      filter: z.string().describe("Filter expression containing token and optional search terms"),
+      page: z.number().optional().describe("Page number for pagination")
     },
-    async ({ organization, filter, limit }) => {
+    async ({ organization, filter, page }) => {
       let command = "projects list";
+      
+      // Extract token from filter
+      const tokenFromFilter = extractTokenFromMessage(filter);
+      if (!tokenFromFilter) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+          }]
+        };
+      }
       
       if (organization) {
         command += ` --organization ${organization}`;
       }
       
-      if (filter) {
-        command += ` --filter "${filter}"`;
+      // If filter contains search terms (not just token), use --search
+      const cleanFilter = filter.replace(/token:\s*([^\s]+)/i, "").trim();
+      if (cleanFilter) {
+        command += ` --search "${cleanFilter}"`;
       }
       
-      if (limit) {
-        command += ` --limit ${limit}`;
+      if (page) {
+        command += ` --page ${page}`;
       }
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenFromFilter });
       
       return {
-        content: [
-          { 
-            type: "text", 
-            text: formatOutput(stdout, stderr, command, needsToken)
-          }
-        ]
+        content: [{ 
+          type: "text", 
+          text: formatOutput(stdout, stderr, command, needsToken)
+        }]
       };
     }
   );
@@ -134,24 +152,34 @@ function setupProjectTools(server: McpServer): void {
     {
       name: z.string().describe("Project name"),
       organization: z.string().describe("Organization ID"),
-      description: z.string().optional().describe("Project description")
+      description: z.string().optional().describe("Project description"),
+      filter: z.string().describe("Filter expression containing token")
     },
-    async ({ name, organization, description }) => {
+    async ({ name, organization, description, filter }) => {
+      // Extract token from filter
+      const tokenFromFilter = extractTokenFromMessage(filter);
+      if (!tokenFromFilter) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+          }]
+        };
+      }
+      
       let command = `projects create --name "${name}" --organization ${organization}`;
       
       if (description) {
         command += ` --description "${description}"`;
       }
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenFromFilter });
       
       return {
-        content: [
-          { 
-            type: "text", 
-            text: formatOutput(stdout, stderr, command, needsToken)
-          }
-        ]
+        content: [{ 
+          type: "text", 
+          text: formatOutput(stdout, stderr, command, needsToken)
+        }]
       };
     }
   );
@@ -160,20 +188,30 @@ function setupProjectTools(server: McpServer): void {
   server.tool(
     "delete-project",
     {
-      project: z.string().describe("Project ID to delete")
+      project: z.string().describe("Project ID to delete"),
+      filter: z.string().describe("Filter expression containing token")
     },
-    async ({ project }) => {
+    async ({ project, filter }) => {
+      // Extract token from filter
+      const tokenFromFilter = extractTokenFromMessage(filter);
+      if (!tokenFromFilter) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+          }]
+        };
+      }
+      
       const command = `projects delete ${project}`;
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenFromFilter });
       
       return {
-        content: [
-          { 
-            type: "text", 
-            text: formatOutput(stdout, stderr, command, needsToken)
-          }
-        ]
+        content: [{ 
+          type: "text", 
+          text: formatOutput(stdout, stderr, command, needsToken)
+        }]
       };
     }
   );
@@ -188,33 +226,64 @@ function setupEnvironmentTools(server: McpServer): void {
     "list-environments",
     {
       project: z.string().optional().describe("Project ID"),
-      filter: z.string().optional().describe("Filter expression"),
-      limit: z.number().optional().describe("Maximum number of items to return")
+      organization: z.string().optional().describe("Organization ID"),
+      filter: z.string().describe("Filter expression containing token and optional search terms"),
+      operationStatus: z.string().optional().describe("Filter by operation status (e.g., draft, stopped)"),
+      clusterStatus: z.string().optional().describe("Filter by cluster status"),
+      type: z.string().optional().describe("Filter by environment type"),
+      page: z.number().optional().describe("Page number for pagination")
     },
-    async ({ project, filter, limit }) => {
+    async ({ project, organization, filter, operationStatus, clusterStatus, type, page }) => {
       let command = "environments list";
+      
+      // Extract token from filter
+      const tokenFromFilter = extractTokenFromMessage(filter);
+      if (!tokenFromFilter) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+          }]
+        };
+      }
       
       if (project) {
         command += ` --project ${project}`;
       }
       
-      if (filter) {
-        command += ` --filter "${filter}"`;
+      if (organization) {
+        command += ` --organization ${organization}`;
       }
       
-      if (limit) {
-        command += ` --limit ${limit}`;
+      // If filter contains search terms (not just token), use --search
+      const cleanFilter = filter.replace(/token:\s*([^\s]+)/i, "").trim();
+      if (cleanFilter) {
+        command += ` --search "${cleanFilter}"`;
       }
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      if (operationStatus) {
+        command += ` --operationStatus ${operationStatus}`;
+      }
+      
+      if (clusterStatus) {
+        command += ` --clusterStatus ${clusterStatus}`;
+      }
+      
+      if (type) {
+        command += ` --type ${type}`;
+      }
+      
+      if (page) {
+        command += ` --page ${page}`;
+      }
+      
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenFromFilter });
       
       return {
-        content: [
-          { 
-            type: "text", 
-            text: formatOutput(stdout, stderr, command, needsToken)
-          }
-        ]
+        content: [{ 
+          type: "text", 
+          text: formatOutput(stdout, stderr, command, needsToken)
+        }]
       };
     }
   );
@@ -226,24 +295,34 @@ function setupEnvironmentTools(server: McpServer): void {
       name: z.string().describe("Environment name"),
       project: z.string().describe("Project ID"),
       template: z.string().describe("Template ID"),
-      branch: z.string().optional().describe("Git branch")
+      branch: z.string().optional().describe("Git branch"),
+      filter: z.string().describe("Filter expression containing token")
     },
-    async ({ name, project, template, branch }) => {
+    async ({ name, project, template, branch, filter }) => {
+      // Extract token from filter
+      const tokenFromFilter = extractTokenFromMessage(filter);
+      if (!tokenFromFilter) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+          }]
+        };
+      }
+      
       let command = `environments create --name "${name}" --project ${project} --template ${template}`;
       
       if (branch) {
         command += ` --branch "${branch}"`;
       }
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenFromFilter });
       
       return {
-        content: [
-          { 
-            type: "text", 
-            text: formatOutput(stdout, stderr, command, needsToken)
-          }
-        ]
+        content: [{ 
+          type: "text", 
+          text: formatOutput(stdout, stderr, command, needsToken)
+        }]
       };
     }
   );
@@ -252,20 +331,30 @@ function setupEnvironmentTools(server: McpServer): void {
   server.tool(
     "start-environment",
     {
-      environment: z.string().describe("Environment ID to start")
+      environment: z.string().describe("Environment ID to start"),
+      filter: z.string().describe("Filter expression containing token")
     },
-    async ({ environment }) => {
+    async ({ environment, filter }) => {
+      // Extract token from filter
+      const tokenFromFilter = extractTokenFromMessage(filter);
+      if (!tokenFromFilter) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+          }]
+        };
+      }
+      
       const command = `environments start ${environment}`;
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenFromFilter });
       
       return {
-        content: [
-          { 
-            type: "text", 
-            text: formatOutput(stdout, stderr, command, needsToken)
-          }
-        ]
+        content: [{ 
+          type: "text", 
+          text: formatOutput(stdout, stderr, command, needsToken)
+        }]
       };
     }
   );
@@ -274,20 +363,30 @@ function setupEnvironmentTools(server: McpServer): void {
   server.tool(
     "stop-environment",
     {
-      environment: z.string().describe("Environment ID to stop")
+      environment: z.string().describe("Environment ID to stop"),
+      filter: z.string().describe("Filter expression containing token")
     },
-    async ({ environment }) => {
+    async ({ environment, filter }) => {
+      // Extract token from filter
+      const tokenFromFilter = extractTokenFromMessage(filter);
+      if (!tokenFromFilter) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+          }]
+        };
+      }
+      
       const command = `environments stop ${environment}`;
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenFromFilter });
       
       return {
-        content: [
-          { 
-            type: "text", 
-            text: formatOutput(stdout, stderr, command, needsToken)
-          }
-        ]
+        content: [{ 
+          type: "text", 
+          text: formatOutput(stdout, stderr, command, needsToken)
+        }]
       };
     }
   );
@@ -296,20 +395,30 @@ function setupEnvironmentTools(server: McpServer): void {
   server.tool(
     "delete-environment",
     {
-      environment: z.string().describe("Environment ID to delete")
+      environment: z.string().describe("Environment ID to delete"),
+      filter: z.string().describe("Filter expression containing token")
     },
-    async ({ environment }) => {
+    async ({ environment, filter }) => {
+      // Extract token from filter
+      const tokenFromFilter = extractTokenFromMessage(filter);
+      if (!tokenFromFilter) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: "Error: Token must be provided in the filter parameter (e.g., 'token: YOUR_TOKEN')"
+          }]
+        };
+      }
+      
       const command = `environments delete ${environment}`;
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenFromFilter });
       
       return {
-        content: [
-          { 
-            type: "text", 
-            text: formatOutput(stdout, stderr, command, needsToken)
-          }
-        ]
+        content: [{ 
+          type: "text", 
+          text: formatOutput(stdout, stderr, command, needsToken)
+        }]
       };
     }
   );
@@ -325,24 +434,53 @@ function setupComponentTools(server: McpServer): void {
     {
       environment: z.string().optional().describe("Environment ID"),
       filter: z.string().optional().describe("Filter expression"),
-      limit: z.number().optional().describe("Maximum number of items to return")
+      limit: z.number().optional().describe("Maximum number of items to return"),
+      componentName: z.string().optional().describe("Filter by component name"),
+      operationStatus: z.string().optional().describe("Filter by operation status"),
+      clusterStatus: z.string().optional().describe("Filter by cluster status"),
+      project: z.string().optional().describe("Filter by project ID"),
+      organization: z.string().optional().describe("Filter by organization ID")
     },
-    async ({ environment, filter, limit }) => {
+    async ({ environment, filter, limit, componentName, operationStatus, clusterStatus, project, organization }) => {
       let command = "components list";
       
+      // Extract token if provided in filter or other parameters
+      const tokenFromFilter = filter ? extractTokenFromMessage(filter) : undefined;
+      const tokenFromEnv = environment ? extractTokenFromMessage(environment) : undefined;
+      const tokenToUse = tokenFromFilter || tokenFromEnv || setSessionToken();
+      
+      // Add specific filters if provided
       if (environment) {
         command += ` --environment ${environment}`;
       }
       
-      if (filter) {
-        command += ` --filter "${filter}"`;
+      if (componentName) {
+        command += ` --componentName ${componentName}`;
       }
       
+      if (operationStatus) {
+        command += ` --operationStatus ${operationStatus}`;
+      }
+      
+      if (clusterStatus) {
+        command += ` --clusterStatus ${clusterStatus}`;
+      }
+      
+      if (project) {
+        command += ` --project ${project}`;
+      }
+      
+      if (organization) {
+        command += ` --organization ${organization}`;
+      }
+      
+      // Note: The CLI doesn't support --limit flag, but we'll use --page=1 for now
       if (limit) {
-        command += ` --limit ${limit}`;
+        // Using page=1 as a default, as limit is not supported
+        command += ` --page 1`;
       }
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenToUse });
       
       return {
         content: [
@@ -362,9 +500,15 @@ function setupComponentTools(server: McpServer): void {
       component: z.string().describe("Component ID to deploy")
     },
     async ({ component }) => {
-      const command = `components deploy ${component}`;
+      // Extract token if provided in component parameter
+      const tokenFromComponent = extractTokenFromMessage(component);
+      const tokenToUse = tokenFromComponent || setSessionToken();
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      // Clean the component ID to remove any token if present
+      const cleanComponent = component.replace(/token:\s*([^\s]+)/i, "").trim();
+      const command = `components deploy ${cleanComponent}`;
+      
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenToUse });
       
       return {
         content: [
@@ -384,9 +528,15 @@ function setupComponentTools(server: McpServer): void {
       component: z.string().describe("Component ID to debug")
     },
     async ({ component }) => {
-      const command = `debug component ${component}`;
+      // Extract token if provided in component parameter
+      const tokenFromComponent = extractTokenFromMessage(component);
+      const tokenToUse = tokenFromComponent || setSessionToken();
       
-      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: setSessionToken() });
+      // Clean the component ID to remove any token if present
+      const cleanComponent = component.replace(/token:\s*([^\s]+)/i, "").trim();
+      const command = `debug ${cleanComponent}`;
+      
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenToUse });
       
       return {
         content: [
@@ -406,12 +556,21 @@ function setupComponentTools(server: McpServer): void {
       component: z.string().describe("Component ID to SSH into")
     },
     async ({ component }) => {
-      // This just returns the command to use since we can't actually SSH in this context
+      // Extract token if provided in component parameter
+      const tokenFromComponent = extractTokenFromMessage(component);
+      const tokenToUse = tokenFromComponent || setSessionToken();
+      
+      // Clean the component ID to remove any token if present
+      const cleanComponent = component.replace(/token:\s*([^\s]+)/i, "").trim();
+      const command = `ssh ${cleanComponent}`;
+      
+      const { stdout, stderr, needsToken } = await execBnsCommand(command, { token: tokenToUse });
+      
       return {
         content: [
           { 
             type: "text", 
-            text: `To SSH into the component, run this command in your terminal:\n\n\`bns ssh ${component}\`\n\nNote: This command can't be executed through the MCP server directly as it requires interactive terminal access.`
+            text: formatOutput(stdout, stderr, command, needsToken)
           }
         ]
       };
