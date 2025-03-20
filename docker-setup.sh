@@ -69,6 +69,21 @@ CMD ["node", "dist/index.js"]
 EOF
 fi
 
+# Optional: Ask for API token
+read -p "Would you like to add your Bunnyshell API token to the Docker configuration? (y/n): " ADD_TOKEN
+if [[ "$ADD_TOKEN" =~ ^[Yy]$ ]]; then
+    read -p "Enter your Bunnyshell API token: " API_TOKEN
+    
+    if [ ! -z "$API_TOKEN" ]; then
+        # Add the token to the docker-compose.yml file
+        echo -e "${YELLOW}Adding API token to docker-compose.yml...${NC}"
+        sed -i'' -e 's/- NODE_ENV=production/- NODE_ENV=production\n      - BNS_API_KEY='"$API_TOKEN"'/' docker-compose.yml
+        echo -e "${GREEN}API token added to docker-compose.yml.${NC}"
+    else
+        echo -e "${YELLOW}No token provided. You'll need to provide it during conversations with Claude.${NC}"
+    fi
+fi
+
 # Build and start the container
 echo -e "${YELLOW}Building and starting the Docker container...${NC}"
 docker-compose up -d --build
@@ -86,9 +101,42 @@ if [ $? -eq 0 ] && [ "$(docker ps -q -f name=bns-mcp-server)" ]; then
         mkdir -p "$CLAUDE_CONFIG_DIR"
     fi
     
-    if [ ! -f "$CLAUDE_CONFIG_FILE" ]; then
-        echo -e "\n${YELLOW}Creating Claude Desktop config file...${NC}"
-        cat > "$CLAUDE_CONFIG_FILE" << EOF
+    # Create or update Claude config with or without token
+    if [[ "$ADD_TOKEN" =~ ^[Yy]$ ]] && [ ! -z "$API_TOKEN" ]; then
+        if [ ! -f "$CLAUDE_CONFIG_FILE" ]; then
+            echo -e "\n${YELLOW}Creating Claude Desktop config file with API token...${NC}"
+            cat > "$CLAUDE_CONFIG_FILE" << EOF
+{
+  "mcpServers": {
+    "bunnyshell-mcp": {
+      "command": "docker",
+      "args": ["exec", "-i", "bns-mcp-server", "node", "dist/index.js"],
+      "env": {
+        "BNS_API_KEY": "$API_TOKEN"
+      }
+    }
+  }
+}
+EOF
+        else
+            echo -e "\n${YELLOW}Claude Desktop config file already exists. Please add the following configuration manually:${NC}"
+            echo ""
+            echo "{
+  \"mcpServers\": {
+    \"bunnyshell-mcp\": {
+      \"command\": \"docker\",
+      \"args\": [\"exec\", \"-i\", \"bns-mcp-server\", \"node\", \"dist/index.js\"],
+      \"env\": {
+        \"BNS_API_KEY\": \"$API_TOKEN\"
+      }
+    }
+  }
+}"
+        fi
+    else
+        if [ ! -f "$CLAUDE_CONFIG_FILE" ]; then
+            echo -e "\n${YELLOW}Creating Claude Desktop config file...${NC}"
+            cat > "$CLAUDE_CONFIG_FILE" << EOF
 {
   "mcpServers": {
     "bunnyshell-mcp": {
@@ -98,17 +146,18 @@ if [ $? -eq 0 ] && [ "$(docker ps -q -f name=bns-mcp-server)" ]; then
   }
 }
 EOF
-    else
-        echo -e "\n${YELLOW}Claude Desktop config file already exists. Please add the following configuration manually:${NC}"
-        echo ""
-        echo '{
-  "mcpServers": {
-    "bunnyshell-mcp": {
-      "command": "docker",
-      "args": ["exec", "-i", "bns-mcp-server", "node", "dist/index.js"]
+        else
+            echo -e "\n${YELLOW}Claude Desktop config file already exists. Please add the following configuration manually:${NC}"
+            echo ""
+            echo "{
+  \"mcpServers\": {
+    \"bunnyshell-mcp\": {
+      \"command\": \"docker\",
+      \"args\": [\"exec\", \"-i\", \"bns-mcp-server\", \"node\", \"dist/index.js\"]
     }
   }
-}'
+}"
+        fi
     fi
     
     echo -e "\n${GREEN}Setup complete!${NC}"
@@ -117,7 +166,9 @@ EOF
     echo -e "2. Start a new conversation with Claude"
     echo -e "3. Click '+' to add an attachment and select 'Connect to MCP server'"
     echo -e "4. Choose 'bunnyshell-mcp' from the list of servers"
-    echo -e "5. Set your Bunnyshell API token using: token: YOUR_API_TOKEN"
+    if [[ ! "$ADD_TOKEN" =~ ^[Yy]$ ]] || [ -z "$API_TOKEN" ]; then
+        echo -e "5. Set your Bunnyshell API token using: token: YOUR_API_TOKEN"
+    fi
     echo -e "6. Start managing your Bunnyshell resources!\n"
     
     echo -e "Example commands you can try:"

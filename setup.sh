@@ -62,10 +62,17 @@ fi
 # Get absolute path to the server
 ABSOLUTE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/dist/index.js"
 
-# Create or update Claude config
-if [ ! -f "$CLAUDE_CONFIG_FILE" ]; then
-    echo -e "\n${YELLOW}Creating Claude Desktop config file...${NC}"
-    cat > "$CLAUDE_CONFIG_FILE" << EOF
+# Optional: Ask for API token to store in configuration
+read -p "Would you like to add your Bunnyshell API token to the configuration? (y/n): " ADD_TOKEN
+if [[ "$ADD_TOKEN" =~ ^[Yy]$ ]]; then
+    read -p "Enter your Bunnyshell API token: " API_TOKEN
+    if [ -z "$API_TOKEN" ]; then
+        echo -e "${YELLOW}No token provided. You'll need to provide it during conversations with Claude.${NC}"
+        
+        # Create or update Claude config without token
+        if [ ! -f "$CLAUDE_CONFIG_FILE" ]; then
+            echo -e "\n${YELLOW}Creating Claude Desktop config file...${NC}"
+            cat > "$CLAUDE_CONFIG_FILE" << EOF
 {
   "mcpServers": {
     "bunnyshell-mcp": {
@@ -75,10 +82,54 @@ if [ ! -f "$CLAUDE_CONFIG_FILE" ]; then
   }
 }
 EOF
+        else
+            echo -e "\n${YELLOW}Claude Desktop config file already exists. Please add the following configuration manually:${NC}"
+            echo ""
+            echo "{\"mcpServers\": {\"bunnyshell-mcp\": {\"command\": \"node\", \"args\": [\"$ABSOLUTE_PATH\"]}}}"
+        fi
+    else
+        # Create or update Claude config with token
+        if [ ! -f "$CLAUDE_CONFIG_FILE" ]; then
+            echo -e "\n${YELLOW}Creating Claude Desktop config file with API token...${NC}"
+            cat > "$CLAUDE_CONFIG_FILE" << EOF
+{
+  "mcpServers": {
+    "bunnyshell-mcp": {
+      "command": "node",
+      "args": ["$ABSOLUTE_PATH"],
+      "env": {
+        "BNS_API_KEY": "$API_TOKEN"
+      }
+    }
+  }
+}
+EOF
+        else
+            echo -e "\n${YELLOW}Claude Desktop config file already exists. Please add the following configuration manually:${NC}"
+            echo ""
+            echo "{\"mcpServers\": {\"bunnyshell-mcp\": {\"command\": \"node\", \"args\": [\"$ABSOLUTE_PATH\"], \"env\": {\"BNS_API_KEY\": \"$API_TOKEN\"}}}}"
+        fi
+        echo -e "\n${GREEN}API token added to configuration. You won't need to provide it in conversations.${NC}"
+    fi
 else
-    echo -e "\n${YELLOW}Claude Desktop config file already exists. Please add the following configuration manually:${NC}"
-    echo ""
-    echo "{\"mcpServers\": {\"bunnyshell-mcp\": {\"command\": \"node\", \"args\": [\"$ABSOLUTE_PATH\"]}}}"
+    # Create or update Claude config without token
+    if [ ! -f "$CLAUDE_CONFIG_FILE" ]; then
+        echo -e "\n${YELLOW}Creating Claude Desktop config file...${NC}"
+        cat > "$CLAUDE_CONFIG_FILE" << EOF
+{
+  "mcpServers": {
+    "bunnyshell-mcp": {
+      "command": "node",
+      "args": ["$ABSOLUTE_PATH"]
+    }
+  }
+}
+EOF
+    else
+        echo -e "\n${YELLOW}Claude Desktop config file already exists. Please add the following configuration manually:${NC}"
+        echo ""
+        echo "{\"mcpServers\": {\"bunnyshell-mcp\": {\"command\": \"node\", \"args\": [\"$ABSOLUTE_PATH\"]}}}"
+    fi
 fi
 
 echo -e "\n${GREEN}Setup complete!${NC}"
@@ -87,7 +138,9 @@ echo -e "1. Start or restart Claude Desktop"
 echo -e "2. Start a new conversation with Claude"
 echo -e "3. Click '+' to add an attachment and select 'Connect to MCP server'"
 echo -e "4. Choose 'bunnyshell-mcp' from the list of servers"
-echo -e "5. Set your Bunnyshell API token using: token: YOUR_API_TOKEN"
+if [[ ! "$ADD_TOKEN" =~ ^[Yy]$ ]] || [ -z "$API_TOKEN" ]; then
+    echo -e "5. Set your Bunnyshell API token using: token: YOUR_API_TOKEN"
+fi
 echo -e "6. Start managing your Bunnyshell resources!\n"
 
 echo -e "Example commands you can try:"

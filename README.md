@@ -82,10 +82,48 @@ You can ask Claude to:
 │   ├── tools.ts       # Tool implementations
 │   ├── utils.ts       # Utility functions
 │   └── index.ts       # Server entry point
+├── .cursor/
+│   └── mcp.json      # Cursor MCP configuration
 ├── setup.sh          # Local setup script
 ├── docker-setup.sh   # Docker setup script
 └── README.md         # Documentation
 ```
+
+### Cursor MCP Configuration
+
+The `.cursor/mcp.json` file contains the configuration for the MCP server in Cursor:
+
+```json
+{
+  "mcpServers": {
+    "bunnyshell-mcp": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "env": {
+        "BNS_API_KEY": "YOUR_API_TOKEN_HERE"
+      }
+    }
+  }
+}
+```
+
+For Docker setup, use:
+
+```json
+{
+  "mcpServers": {
+    "bunnyshell-mcp": {
+      "command": "docker",
+      "args": ["exec", "-i", "bns-mcp-server", "node", "dist/index.js"],
+      "env": {
+        "BNS_API_KEY": "YOUR_API_TOKEN_HERE"
+      }
+    }
+  }
+}
+```
+
+**Note:** By adding your Bunnyshell API token to the `env` section, the MCP server will automatically use it for authentication without requiring you to provide it for each command. The code already checks for the `BNS_API_KEY` environment variable. This is especially useful for development and personal use. For shared environments, it's recommended to omit the token from configuration files and provide it during the conversation instead.
 
 ### Building
 
